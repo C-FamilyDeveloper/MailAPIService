@@ -12,12 +12,14 @@ namespace MailAPIService.Controllers
     public class MailConroller : ControllerBase
     {
         private readonly ILogger<MailMessage> logger;
-        private readonly IBaseRepository<MailMessage> repository;
-
-        public MailConroller(ILogger<MailMessage> logger, IBaseRepository<MailMessage> repository)
+        private readonly IBaseRepository<MailMessage> mailrepository;
+        private readonly IBaseRepository<Recipient> recipientrepository;
+        public MailConroller(ILogger<MailMessage> logger, IBaseRepository<MailMessage> mailrepository,
+            IBaseRepository<Recipient> recipientrepository)
         {
             this.logger = logger;
-            this.repository = repository;
+            this.mailrepository = mailrepository;
+            this.recipientrepository = recipientrepository;
         }
         /// <summary>
         /// GET запрос к пути "api/mails, получает информацию о сообщени€х 
@@ -26,7 +28,7 @@ namespace MailAPIService.Controllers
         [HttpGet]
         public List<MailResponce>  Get()
         {
-            return repository.GetAllEntities().Select(i => new MailResponce
+            return mailrepository.GetAllEntities().Select(i => new MailResponce
             {
                 MailDateTime = i.MailLog.MailDateTime,
                 Body = i.Body,
@@ -66,14 +68,18 @@ namespace MailAPIService.Controllers
                     Body = mailRequest.Body,
                     Subject = mailRequest.Subject
                 };
-                await repository.Add(message);
+                await mailrepository.Add(message);
                 message.MessageRecipients = mailRequest.Recipients.Select(i =>
                     new MessageRecipient
                     {
                         Message = message,
-                        MailRecipient = new Recipient { Email = i }
+                        MailRecipient =  recipientrepository.GetAllEntities().Select(j=>
+                        j.Email.Trim()).Contains(i)? 
+                            recipientrepository.GetAllEntities().Where(k=>k.Email.Trim() == i).First() 
+                            :
+                            new Recipient { Email = i }
                     }).ToList();
-                await repository.Update(message);
+                await mailrepository.Update(message);
             }
         }
     }
