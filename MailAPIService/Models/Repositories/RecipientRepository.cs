@@ -1,8 +1,8 @@
-﻿using MailerAPIService.Models.DataContexts;
-using MailerAPIService.Models.DataEntities;
-using MailerAPIService.Models.Interfaces;
+﻿using MailAPIService.Models.DataContexts;
+using MailAPIService.Models.DataEntities;
+using MailAPIService.Models.Interfaces;
 
-namespace MailerAPIService.Models.Repositories
+namespace MailAPIService.Models.Repositories
 {
     public class RecipientRepository : IBaseRepository<Recipient>
     {

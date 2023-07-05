@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace MailerAPIService.Models.DataEntities
+namespace MailAPIService.Models.DataEntities
 {
     public class Recipient
     {

@@ -1,7 +1,8 @@
-using MailerAPIService.Models.DataContexts;
-using MailerAPIService.Models.DataEntities;
-using MailerAPIService.Models.Interfaces;
-using MailerAPIService.Models.Repositories;
+using MailAPIService.Models.Configs;
+using MailAPIService.Models.DataContexts;
+using MailAPIService.Models.DataEntities;
+using MailAPIService.Models.Interfaces;
+using MailAPIService.Models.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace MailAPIService
@@ -11,6 +12,7 @@ namespace MailAPIService
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Configuration.AddJsonFile("appsettings.json");
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -20,6 +22,7 @@ namespace MailAPIService
             builder.Services.AddScoped<IBaseRepository<MailMessage>, MessageRepository>();
             builder.Services.AddScoped<IBaseRepository<Recipient>, RecipientRepository>();
             builder.Services.AddScoped<IBaseRepository<MessageRecipient>, MessageRecipientRepository>();
+            builder.Services.Configure<Config>(builder.Configuration);
             var app = builder.Build();
             if (app.Environment.IsDevelopment())
             {

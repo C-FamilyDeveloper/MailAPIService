@@ -1,9 +1,12 @@
 using MailAPIService.Models.Requests;
 using MailAPIService.Models.Responces;
-using MailerAPIService.Models.DataEntities;
-using MailerAPIService.Models.Interfaces;
-using MailerAPIService.Models.Services;
+using MailAPIService.Models.DataEntities;
+using MailAPIService.Models.Interfaces;
+using MailAPIService.Models.Services;
 using Microsoft.AspNetCore.Mvc;
+using MailAPIService.Models.Enums;
+using Microsoft.Extensions.Options;
+using MailAPIService.Models.Configs;
 
 namespace MailAPIService.Controllers
 {
@@ -15,15 +18,19 @@ namespace MailAPIService.Controllers
         private readonly IBaseRepository<MessageRecipient> messagerecipientrepository;
         private readonly IBaseRepository<Recipient> recipientrepository;
         private readonly IBaseRepository<MailLog> logrepository;
+        private readonly IOptions <Config> options;
+
         public MailConroller(IBaseRepository<MailMessage> mailrepository,
             IBaseRepository<MessageRecipient> messagerecipientrepository,
             IBaseRepository<Recipient> recipientrepository,
-            IBaseRepository<MailLog> logrepository)
+            IBaseRepository<MailLog> logrepository,
+            IOptions<Config> options)
         {
             this.mailrepository = mailrepository;
             this.messagerecipientrepository = messagerecipientrepository;
             this.recipientrepository = recipientrepository;
             this.logrepository = logrepository;
+            this.options = options;
         }
         /// <summary>
         /// GET запрос к пути "api/mails, получает информацию о сообщени€х 
@@ -39,7 +46,7 @@ namespace MailAPIService.Controllers
                 Body = i.Message.Body,
                 Subject = i.Message.Subject,
                 FailedMessage = i.MailLog.FailedMessage,
-                Result = i.MailLog.Result,
+                MailResult = i.MailLog.MailResult,
             }).ToList();
         }
         /// <summary>
@@ -50,8 +57,7 @@ namespace MailAPIService.Controllers
         [HttpPost]
         public async Task Post([FromBody] MailRequest mailRequest)
         {
-            var service = new MailService(ConfigService.GetServerAuthFromConfig(
-                "C:\\Users\\User\\Downloads\\config.ini"));
+            var service = new MailService(options.Value.MailServerInfo);
             MailMessage message = await mailrepository.AddIfNotExist(
                new() { Body = mailRequest.Body, Subject = mailRequest.Subject });
             foreach (var i in mailRequest.Recipients)
@@ -60,12 +66,12 @@ namespace MailAPIService.Controllers
                 try
                 {
                     await service.SendMessageAsync(i, mailRequest.Subject, mailRequest.Body);
-                    log.Result = "OK";
+                    log.MailResult = Result.OK;
                     log.FailedMessage = "";
                 }
                 catch (Exception ex)
                 {
-                    log.Result = "Failed";
+                    log.MailResult = Result.Failed;
                     log.FailedMessage = ex.Message;
                 }
                 finally
@@ -80,7 +86,6 @@ namespace MailAPIService.Controllers
                         MailRecipient = recipient
                     };
                     await logrepository.Add(log);
-                    await Task.Delay(1000);
                 }
             } 
         }

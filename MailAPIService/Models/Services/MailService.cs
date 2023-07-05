@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Mail;
+using MailAPIService.Models.Configs;
 using MailAPIService.Models.Requests;
 
-namespace MailerAPIService.Models.Services
+namespace MailAPIService.Models.Services
 {
     public  class MailService
     {
@@ -16,7 +17,7 @@ namespace MailerAPIService.Models.Services
         public MailService(MailServerInfo serverAuth) 
         {
             server = new(serverAuth.ServerAddress.Trim(), serverAuth.DisplayName.Trim());
-            smtpClient = new(serverAuth.SMTPHost.Trim(), serverAuth.SMTPPort)
+            smtpClient = new(serverAuth.SMTPHost.Trim(), Convert.ToInt32(serverAuth.SMTPPort))
             {
                 UseDefaultCredentials = false,
                 DeliveryMethod = SmtpDeliveryMethod.Network,

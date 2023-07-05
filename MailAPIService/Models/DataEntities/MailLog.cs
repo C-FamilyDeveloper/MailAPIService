@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MailAPIService.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MailerAPIService.Models.DataEntities
+namespace MailAPIService.Models.DataEntities
 {
     public class MailLog
     {
@@ -15,7 +16,7 @@ namespace MailerAPIService.Models.DataEntities
         /// <summary>
         /// Код сообщения
         /// </summary>
-        public string Result { get; set; }
+        public Result MailResult { get; set; }
         /// <summary>
         /// Текст ошибки (если есть)
         /// </summary>

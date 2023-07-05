@@ -1,4 +1,4 @@
-﻿namespace MailerAPIService.Models.Interfaces
+﻿namespace MailAPIService.Models.Interfaces
 {
     public interface IBaseRepository <T> where T : class
     {

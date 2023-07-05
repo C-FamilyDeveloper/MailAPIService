@@ -1,7 +1,7 @@
-﻿using MailerAPIService.Models.DataEntities;
+﻿using MailAPIService.Models.DataEntities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MailerAPIService.Models.DataContexts
+namespace MailAPIService.Models.DataContexts
 {
     public class ApplicationContext : DbContext
     {
