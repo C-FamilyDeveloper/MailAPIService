@@ -21,10 +21,6 @@ namespace MailerAPIService.Models.DataEntities
         /// </summary>
         public string Subject { get; set; }
         /// <summary>
-        /// Ссылка на запись лога по сообщению
-        /// </summary>
-        public MailLog MailLog { get; set; }
-        /// <summary>
         /// Ссылка на записи из зависимой таблицы MessageRecipients
         /// </summary>
         public List<MessageRecipient> MessageRecipients { get; set; } = new();

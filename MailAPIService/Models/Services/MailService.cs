@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Net.Mail;
 using MailAPIService.Models.Requests;
 
@@ -21,34 +22,33 @@ namespace MailerAPIService.Models.Services
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 Credentials = new NetworkCredential(serverAuth.ServerAddress.Trim(),
                 serverAuth.AuthPassword.Trim()),
-                Timeout = 5000,
+                Timeout = 1000,
                 EnableSsl = true
             };
         }
         /// <summary>
-        /// Отправка сообщения по электронной почте, по заданным адресам
+        /// Отправка сообщения по электронной почте, по заданному адресу
         /// </summary>
-        /// <param name="mailMessageInfo">Класс с информацией об отправляемом сообщении и получателях</param>
+        /// <param name="email">Адрес электронной почты получателя</param>
+        /// <param name="subject">Тема сообщения</param>
+        /// <param name="body">Тело сообщения</param>
         /// <returns>(awaitable) Асинхронная задача</returns>
-        public async Task SendMessagesAsync(MailRequest mailMessageInfo)
+        public async Task SendMessageAsync([EmailAddress] string email, string subject, string body)
         {
-            foreach (var i in mailMessageInfo.Recipients) 
-            { 
-                try
+            try
+            {
+                MailAddress address = new(email);
+                MailMessage message = new(server, address)
                 {
-                    MailAddress address = new(i.Trim());
-                    System.Net.Mail.MailMessage message = new(server, address)
-                    {
-                        Subject = mailMessageInfo.Subject.Trim(),
-                        Body = mailMessageInfo.Body.Trim(),
-                    };
-                    await smtpClient.SendMailAsync(message);
-                }
-                catch (Exception) 
-                {
-                    throw;                   
-                }
+                    Subject = subject.Trim(),
+                    Body = body.Trim(),
+                };
+                await smtpClient.SendMailAsync(message);
             }
+            catch (Exception)
+            {
+                throw;
+            }            
         }
 
     }

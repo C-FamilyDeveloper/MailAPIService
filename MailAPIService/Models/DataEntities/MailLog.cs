@@ -24,12 +24,12 @@ namespace MailerAPIService.Models.DataEntities
         /// Дата отправки
         /// </summary>
         public DateTime MailDateTime { get; set; }
+        public int MessageRecipientId { get; set; }
         /// <summary>
-        /// Ссылка на запись сообщения
+        /// Ссылка на таблицу истории
         /// </summary>
-        public int MessageId { get; set; }
-        [ForeignKey(nameof(MessageId))]
+        [ForeignKey(nameof(MessageRecipientId))]
         [DeleteBehavior(DeleteBehavior.ClientCascade)]
-        public MailMessage MailMessage { get; set; }
+        public MessageRecipient MailMessageRecipient { get; set; }
     }
 }

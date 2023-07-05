@@ -32,5 +32,9 @@ namespace MailerAPIService.Models.DataEntities
         [ForeignKey(nameof(RecipientId))]
         [DeleteBehavior(DeleteBehavior.ClientCascade)]
         public Recipient MailRecipient { get; set; }
+        /// <summary>
+        /// Ссылка на лог сообщения
+        /// </summary>
+        public MailLog MailLog { get; set; }
     }
 }

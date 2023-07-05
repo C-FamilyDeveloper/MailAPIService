@@ -24,6 +24,7 @@ namespace MailerAPIService.Models.DataContexts
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
+            //Database.EnsureDeleted();
             Database.EnsureCreated();
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

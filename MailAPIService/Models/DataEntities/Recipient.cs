@@ -14,6 +14,7 @@ namespace MailerAPIService.Models.DataEntities
         /// <summary>
         /// Адрес электронной почты
         /// </summary>
+        [EmailAddress]
         public string Email { get; set; }
         /// <summary>
         /// Ссылка на записи из зависимой таблицы MessageRecipients

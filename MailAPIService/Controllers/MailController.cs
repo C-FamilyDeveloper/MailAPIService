@@ -11,28 +11,33 @@ namespace MailAPIService.Controllers
     [Route("api/mails")]
     public class MailConroller : ControllerBase
     {
-        private readonly ILogger<MailMessage> logger;
         private readonly IBaseRepository<MailMessage> mailrepository;
+        private readonly IBaseRepository<MessageRecipient> messagerecipientrepository;
         private readonly IBaseRepository<Recipient> recipientrepository;
-        public MailConroller(ILogger<MailMessage> logger, IBaseRepository<MailMessage> mailrepository,
-            IBaseRepository<Recipient> recipientrepository)
+        private readonly IBaseRepository<MailLog> logrepository;
+        public MailConroller(IBaseRepository<MailMessage> mailrepository,
+            IBaseRepository<MessageRecipient> messagerecipientrepository,
+            IBaseRepository<Recipient> recipientrepository,
+            IBaseRepository<MailLog> logrepository)
         {
-            this.logger = logger;
             this.mailrepository = mailrepository;
+            this.messagerecipientrepository = messagerecipientrepository;
             this.recipientrepository = recipientrepository;
+            this.logrepository = logrepository;
         }
         /// <summary>
         /// GET запрос к пути "api/mails, получает информацию о сообщениях 
         /// </summary>
-        /// <returns>JSON файл с ответом</returns>
+        /// <returns>(awaitable) Асинхронная задача c JSON файлом ответа </returns>
         [HttpGet]
-        public List<MailResponce>  Get()
+        public async Task<List<MailResponce>>  Get()
         {
-            return mailrepository.GetAllEntities().Select(i => new MailResponce
+            await Task.Delay(100);
+            return messagerecipientrepository.GetAllEntities().Select(i => new MailResponce
             {
                 MailDateTime = i.MailLog.MailDateTime,
-                Body = i.Body,
-                Subject = i.Subject,
+                Body = i.Message.Body,
+                Subject = i.Message.Subject,
                 FailedMessage = i.MailLog.FailedMessage,
                 Result = i.MailLog.Result,
             }).ToList();
@@ -40,47 +45,44 @@ namespace MailAPIService.Controllers
         /// <summary>
         /// POST запрос к пути "api/mails, c JSON параметрами, отправляет адресатам сообщения и  логирует их 
         /// </summary>
-        /// <param name="mailInfo">JSON файл с информацией о получателях и сообщении</param>
+        /// <param name="mailRequest">JSON файл с информацией о получателях и сообщении</param>
         /// <returns>(awaitable) Асинхронная задача</returns>
         [HttpPost]
         public async Task Post([FromBody] MailRequest mailRequest)
         {
             var service = new MailService(ConfigService.GetServerAuthFromConfig(
                 "C:\\Users\\User\\Downloads\\config.ini"));
-            MailLog log = new();
-            try
+            MailMessage message = await mailrepository.AddIfNotExist(
+               new() { Body = mailRequest.Body, Subject = mailRequest.Subject });
+            foreach (var i in mailRequest.Recipients)
             {
-                await service.SendMessagesAsync(mailRequest);
-                log.Result = "OK";
-                log.FailedMessage = "";
-            }
-            catch (Exception ex)
-            {
-                log.Result = "Failed";
-                log.FailedMessage = ex.Message;
-            }
-            finally
-            {
-                log.MailDateTime = DateTime.Now;
-                var message = new MailMessage
+                MailLog log = new();
+                try
                 {
-                    MailLog = log,
-                    Body = mailRequest.Body,
-                    Subject = mailRequest.Subject
-                };
-                await mailrepository.Add(message);
-                message.MessageRecipients = mailRequest.Recipients.Select(i =>
-                    new MessageRecipient
+                    await service.SendMessageAsync(i, mailRequest.Subject, mailRequest.Body);
+                    log.Result = "OK";
+                    log.FailedMessage = "";
+                }
+                catch (Exception ex)
+                {
+                    log.Result = "Failed";
+                    log.FailedMessage = ex.Message;
+                }
+                finally
+                {
+                    log.MailDateTime = DateTime.Now;
+                    Recipient recipient = await recipientrepository.AddIfNotExist(
+                        new() { Email = i });
+                    log.MailMessageRecipient = new MessageRecipient
                     {
                         Message = message,
-                        MailRecipient =  recipientrepository.GetAllEntities().Select(j=>
-                        j.Email.Trim()).Contains(i)? 
-                            recipientrepository.GetAllEntities().Where(k=>k.Email.Trim() == i).First() 
-                            :
-                            new Recipient { Email = i }
-                    }).ToList();
-                await mailrepository.Update(message);
-            }
+                        MailLog = log,
+                        MailRecipient = recipient
+                    };
+                    await logrepository.Add(log);
+                    await Task.Delay(1000);
+                }
+            } 
         }
     }
 }

@@ -33,5 +33,25 @@ namespace MailerAPIService.Models.Repositories
         {
             return context.Logs;
         }
+
+        public async Task<MailLog?> Find(MailLog entity)
+        {
+            var findedentity = await context.Logs.FindAsync(entity);
+            return findedentity;
+        }
+
+        public async Task<MailLog> AddIfNotExist(MailLog entity)
+        {
+            var find = await Find(entity);
+            if (find == null)
+            {
+                await Add(entity);
+                return context.Logs.OrderBy(i=>i.Id).Last();
+            }
+            else
+            {
+                return find;
+            }           
+        }
     }
 }
