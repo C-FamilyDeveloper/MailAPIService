@@ -1,6 +1,7 @@
 ﻿using MailAPIService.Models.DataContexts;
 using MailAPIService.Models.DataEntities;
 using MailAPIService.Models.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MailAPIService.Models.Repositories
 {
@@ -13,27 +14,26 @@ namespace MailAPIService.Models.Repositories
         }
         public async Task Add(Recipient entity)
         {
-            await context.AddAsync(entity);
-            await context.SaveChangesAsync();
+            await context.Recipients.AddAsync(entity);
+            //await context.SaveChangesAsync();
         }
         public async Task Update(Recipient entity)
         {
-            context.Update(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(() => context.Recipients.Update(entity));
+            //await context.SaveChangesAsync();
         }
         public async Task Delete(Recipient entity)
         {
-            context.Remove(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(() => context.Recipients.Remove(entity));
+            //await context.SaveChangesAsync();
         }
-        public IQueryable<Recipient> GetAllEntities()
+        public async Task<List<Recipient>> GetAll()
         {
-            return context.Recipients;
+            return await context.Recipients.ToListAsync();
         }
         public async Task<Recipient?> Find(Recipient entity)
         {
-            await Task.Delay(100);
-            var find = context.Recipients.Where(i => i.Email == entity.Email).FirstOrDefault();
+            var find = await context.Recipients.Where(i => i.Email == entity.Email).FirstOrDefaultAsync();
             return (find == default)? null : find;
         }
         public async Task<Recipient> AddIfNotExist(Recipient entity)
@@ -42,12 +42,16 @@ namespace MailAPIService.Models.Repositories
             if (find == null)
             {
                 await Add(entity);
-                return context.Recipients.OrderBy(i => i.Id).Last();
+                return entity;
             }
             else
             {
                 return find;
             }
+        }
+        public async Task Save()
+        {
+            await context.SaveChangesAsync();
         }
     }
 }

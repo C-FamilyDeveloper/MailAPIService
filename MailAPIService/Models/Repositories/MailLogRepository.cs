@@ -1,6 +1,7 @@
 ﻿using MailAPIService.Models.DataContexts;
 using MailAPIService.Models.DataEntities;
 using MailAPIService.Models.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MailAPIService.Models.Repositories
 {
@@ -13,31 +14,30 @@ namespace MailAPIService.Models.Repositories
         }
         public async Task Add(MailLog entity)
         { 
-            await context.AddAsync(entity);
-            await context.SaveChangesAsync();
+            await context.Logs.AddAsync(entity);
+            //await context.SaveChangesAsync();
         }
         public async Task Update(MailLog entity)
         {
-            context.Update(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(()=>context.Logs.Update(entity));
+            //await context.SaveChangesAsync();
         }
 
         public async Task Delete(MailLog entity)
         {
-            context.Remove(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(() => context.Logs.Remove(entity));
+            //await context.SaveChangesAsync();
         }
 
 
-        public IQueryable<MailLog> GetAllEntities()
+        public async Task<List<MailLog>> GetAll()
         {
-            return context.Logs;
+            return await context.Logs.ToListAsync();
         }
 
         public async Task<MailLog?> Find(MailLog entity)
         {
-            var findedentity = await context.Logs.FindAsync(entity);
-            return findedentity;
+            return await context.Logs.FindAsync(entity);
         }
 
         public async Task<MailLog> AddIfNotExist(MailLog entity)
@@ -46,12 +46,16 @@ namespace MailAPIService.Models.Repositories
             if (find == null)
             {
                 await Add(entity);
-                return context.Logs.OrderBy(i=>i.Id).Last();
+                return entity;
             }
             else
             {
                 return find;
             }           
+        }
+        public async Task Save()
+        {
+            await context.SaveChangesAsync();
         }
     }
 }

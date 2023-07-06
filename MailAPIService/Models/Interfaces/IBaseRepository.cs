@@ -36,6 +36,7 @@
         /// Получает все записи таблицы из БД
         /// </summary>
         /// <returns>Коллекция сущностей</returns>
-        IQueryable<T> GetAllEntities();
+        Task<List<T>> GetAll();
+        Task Save();
     }
 }

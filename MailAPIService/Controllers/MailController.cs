@@ -39,8 +39,8 @@ namespace MailAPIService.Controllers
         [HttpGet]
         public async Task<List<MailResponce>>  Get()
         {
-            await Task.Delay(100);
-            return messagerecipientrepository.GetAllEntities().Select(i => new MailResponce
+            var list = await messagerecipientrepository.GetAll();
+            var responce  = list.Select(i => new MailResponce
             {
                 MailDateTime = i.MailLog.MailDateTime,
                 Body = i.Message.Body,
@@ -48,6 +48,7 @@ namespace MailAPIService.Controllers
                 FailedMessage = i.MailLog.FailedMessage,
                 MailResult = i.MailLog.MailResult,
             }).ToList();
+            return responce;
         }
         /// <summary>
         /// POST запрос к пути "api/mails, c JSON параметрами, отправляет адресатам сообщения и  логирует их 
@@ -58,8 +59,7 @@ namespace MailAPIService.Controllers
         public async Task Post([FromBody] MailRequest mailRequest)
         {
             var service = new MailService(options.Value.MailServerInfo);
-            MailMessage message = await mailrepository.AddIfNotExist(
-               new() { Body = mailRequest.Body, Subject = mailRequest.Subject });
+            MailMessage message = await mailrepository.AddIfNotExist(new() { Body = mailRequest.Body, Subject = mailRequest.Subject });
             foreach (var i in mailRequest.Recipients)
             {
                 MailLog log = new();
@@ -67,7 +67,6 @@ namespace MailAPIService.Controllers
                 {
                     await service.SendMessageAsync(i, mailRequest.Subject, mailRequest.Body);
                     log.MailResult = Result.OK;
-                    log.FailedMessage = "";
                 }
                 catch (Exception ex)
                 {
@@ -77,17 +76,17 @@ namespace MailAPIService.Controllers
                 finally
                 {
                     log.MailDateTime = DateTime.Now;
-                    Recipient recipient = await recipientrepository.AddIfNotExist(
-                        new() { Email = i });
+                    Recipient recipient = await recipientrepository.AddIfNotExist( new() { Email = i });
                     log.MailMessageRecipient = new MessageRecipient
                     {
                         Message = message,
                         MailLog = log,
                         MailRecipient = recipient
                     };
-                    await logrepository.Add(log);
+                    await logrepository.Add(log);                    
                 }
-            } 
+            }
+            await logrepository.Save();
         }
     }
 }

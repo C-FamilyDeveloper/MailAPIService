@@ -23,7 +23,7 @@ namespace MailAPIService.Models.Services
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 Credentials = new NetworkCredential(serverAuth.ServerAddress.Trim(),
                 serverAuth.AuthPassword.Trim()),
-                Timeout = 1000,
+                Timeout = 5000,
                 EnableSsl = true
             };
         }

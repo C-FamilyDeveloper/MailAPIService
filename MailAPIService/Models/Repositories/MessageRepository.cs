@@ -1,6 +1,7 @@
 ﻿using MailAPIService.Models.DataContexts;
 using MailAPIService.Models.DataEntities;
 using MailAPIService.Models.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MailAPIService.Models.Repositories
 {
@@ -13,31 +14,30 @@ namespace MailAPIService.Models.Repositories
         }
         public async Task Add(MailMessage entity)
         {            
-            await context.AddAsync(entity);
-            await context.SaveChangesAsync();
+            await context.Messages.AddAsync(entity);
+            //await context.SaveChangesAsync();
         }
         public async Task Update(MailMessage entity)
         {
-            context.Update(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(()=>context.Messages.Update(entity));
+            //await context.SaveChangesAsync();
         }
 
         public async Task Delete(MailMessage entity)
         {
-            context.Remove(entity);
-            await context.SaveChangesAsync();
+            await Task.Run(() => context.Messages.Remove(entity));
+            //await context.SaveChangesAsync();
         }
 
 
-        public IQueryable<MailMessage> GetAllEntities()
+        public async Task<List<MailMessage>> GetAll()
         {
-            return context.Messages;
+            return await context.Messages.ToListAsync();
         }
         public async Task<MailMessage?> Find(MailMessage entity)
         {
-            await Task.Delay(100);
-            var find = context.Messages.Where(
-                i => i.Body == entity.Body && i.Subject == entity.Subject).FirstOrDefault();
+            var find = await context.Messages.Where(
+                i => i.Body == entity.Body && i.Subject == entity.Subject).FirstOrDefaultAsync();
             return (find == default) ? null : find;
         }
         public async Task<MailMessage> AddIfNotExist(MailMessage entity)
@@ -46,12 +46,16 @@ namespace MailAPIService.Models.Repositories
             if (find == null)
             {
                 await Add(entity);
-                return context.Messages.OrderBy(i => i.Id).Last();
+                return entity;
             }
             else
             {
                 return find;
             }
+        }
+        public  async Task Save()
+        {
+            await context.SaveChangesAsync();
         }
     }
 }

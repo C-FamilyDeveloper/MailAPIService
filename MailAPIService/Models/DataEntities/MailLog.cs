@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MailAPIService.Models.DataEntities
 {
@@ -20,7 +21,8 @@ namespace MailAPIService.Models.DataEntities
         /// <summary>
         /// Текст ошибки (если есть)
         /// </summary>
-        public string FailedMessage { get; set; }
+        [MaybeNull]
+        public string? FailedMessage { get; set; }
         /// <summary>
         /// Дата отправки
         /// </summary>
