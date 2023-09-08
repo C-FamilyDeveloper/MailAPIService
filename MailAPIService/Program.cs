@@ -1,8 +1,10 @@
+using MailAPIService.Models.Abstractions;
 using MailAPIService.Models.Configs;
 using MailAPIService.Models.DataContexts;
 using MailAPIService.Models.DataEntities;
 using MailAPIService.Models.Interfaces;
 using MailAPIService.Models.Repositories;
+using MailAPIService.Models.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace MailAPIService
@@ -22,6 +24,7 @@ namespace MailAPIService
             builder.Services.AddScoped<IBaseRepository<MailMessage>, MessageRepository>();
             builder.Services.AddScoped<IBaseRepository<Recipient>, RecipientRepository>();
             builder.Services.AddScoped<IBaseRepository<MessageRecipient>, MessageRecipientRepository>();
+            builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.Configure<Config>(builder.Configuration);
             var app = builder.Build();
             if (app.Environment.IsDevelopment())

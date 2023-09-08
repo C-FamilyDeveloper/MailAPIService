@@ -15,19 +15,16 @@ namespace MailAPIService.Models.Repositories
         public async Task Add(Recipient entity)
         {
             await context.Recipients.AddAsync(entity);
-            //await context.SaveChangesAsync();
         }
         public async Task Update(Recipient entity)
         {
             await Task.Run(() => context.Recipients.Update(entity));
-            //await context.SaveChangesAsync();
         }
         public async Task Delete(Recipient entity)
         {
             await Task.Run(() => context.Recipients.Remove(entity));
-            //await context.SaveChangesAsync();
         }
-        public async Task<List<Recipient>> GetAll()
+        public async Task<List<Recipient>> Get()
         {
             return await context.Recipients.ToListAsync();
         }

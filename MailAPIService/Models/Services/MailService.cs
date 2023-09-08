@@ -1,21 +1,22 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Mail;
+using MailAPIService.Models.Abstractions;
 using MailAPIService.Models.Configs;
-using MailAPIService.Models.Requests;
+using Microsoft.Extensions.Options;
 
 namespace MailAPIService.Models.Services
 {
-    public  class MailService
+    public  class MailService : IMailService
     {
+        private readonly IOptions<Config> options;
         private MailAddress server;
         private SmtpClient smtpClient;
-        /// <summary>
-        /// Конструктор сервиса
-        /// </summary>
-        /// <param name="serverAuth">Класс с авторизационной информацией сервера</param>
-        public MailService(MailServerInfo serverAuth) 
+
+        public MailService(IOptions<Config> options) 
         {
+            this.options = options;
+            var serverAuth = options.Value.MailServerInfo;
             server = new(serverAuth.ServerAddress.Trim(), serverAuth.DisplayName.Trim());
             smtpClient = new(serverAuth.SMTPHost.Trim(), Convert.ToInt32(serverAuth.SMTPPort))
             {
@@ -27,13 +28,7 @@ namespace MailAPIService.Models.Services
                 EnableSsl = true
             };
         }
-        /// <summary>
-        /// Отправка сообщения по электронной почте, по заданному адресу
-        /// </summary>
-        /// <param name="email">Адрес электронной почты получателя</param>
-        /// <param name="subject">Тема сообщения</param>
-        /// <param name="body">Тело сообщения</param>
-        /// <returns>(awaitable) Асинхронная задача</returns>
+
         public async Task SendMessageAsync([EmailAddress] string email, string subject, string body)
         {
             try
