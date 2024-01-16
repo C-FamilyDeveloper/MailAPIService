@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MailAPIService.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
-namespace MailerAPIService.Models.DataEntities
+namespace MailAPIService.Models.DataEntities
 {
     public class MailLog
     {
@@ -15,11 +17,12 @@ namespace MailerAPIService.Models.DataEntities
         /// <summary>
         /// Код сообщения
         /// </summary>
-        public string Result { get; set; }
+        public Result MailResult { get; set; }
         /// <summary>
         /// Текст ошибки (если есть)
         /// </summary>
-        public string FailedMessage { get; set; }
+        [MaybeNull]
+        public string? FailedMessage { get; set; }
         /// <summary>
         /// Дата отправки
         /// </summary>
@@ -30,6 +33,6 @@ namespace MailerAPIService.Models.DataEntities
         /// </summary>
         [ForeignKey(nameof(MessageRecipientId))]
         [DeleteBehavior(DeleteBehavior.ClientCascade)]
-        public MessageRecipient MailMessageRecipient { get; set; }
+        public MessageRecipient MessageRecipient { get; set; }
     }
 }

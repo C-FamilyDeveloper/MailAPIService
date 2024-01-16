@@ -1,8 +1,8 @@
+using MailAPIService.Models.Facades;
+using MailAPIService.Models.Interfaces;
 using MailAPIService.Models.Requests;
 using MailAPIService.Models.Responces;
-using MailerAPIService.Models.DataEntities;
-using MailerAPIService.Models.Interfaces;
-using MailerAPIService.Models.Services;
+using MailAPIService.Models.Services.CRUD;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MailAPIService.Controllers
@@ -11,78 +11,48 @@ namespace MailAPIService.Controllers
     [Route("api/mails")]
     public class MailConroller : ControllerBase
     {
-        private readonly IBaseRepository<MailMessage> mailrepository;
-        private readonly IBaseRepository<MessageRecipient> messagerecipientrepository;
-        private readonly IBaseRepository<Recipient> recipientrepository;
-        private readonly IBaseRepository<MailLog> logrepository;
-        public MailConroller(IBaseRepository<MailMessage> mailrepository,
-            IBaseRepository<MessageRecipient> messagerecipientrepository,
-            IBaseRepository<Recipient> recipientrepository,
-            IBaseRepository<MailLog> logrepository)
+        private readonly MailFacade mailFacade;
+        private readonly IMailLogService mailService;
+
+        public MailConroller(MailFacade mailFacade, IMailLogService mailService)
         {
-            this.mailrepository = mailrepository;
-            this.messagerecipientrepository = messagerecipientrepository;
-            this.recipientrepository = recipientrepository;
-            this.logrepository = logrepository;
+            this.mailFacade = mailFacade;
+            this.mailService = mailService;
         }
-        /// <summary>
-        /// GET запрос к пути "api/mails, получает информацию о сообщениях 
-        /// </summary>
-        /// <returns>(awaitable) Асинхронная задача c JSON файлом ответа </returns>
+
         [HttpGet]
-        public async Task<List<MailResponce>>  Get()
+        public async Task<ActionResult<List<MailResponce>>> Get()
         {
-            await Task.Delay(100);
-            return messagerecipientrepository.GetAllEntities().Select(i => new MailResponce
+            try
             {
-                MailDateTime = i.MailLog.MailDateTime,
-                Body = i.Message.Body,
-                Subject = i.Message.Subject,
-                FailedMessage = i.MailLog.FailedMessage,
-                Result = i.MailLog.Result,
-            }).ToList();
+                return Ok(await mailService.GetLogs());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-        /// <summary>
-        /// POST запрос к пути "api/mails, c JSON параметрами, отправляет адресатам сообщения и  логирует их 
-        /// </summary>
-        /// <param name="mailRequest">JSON файл с информацией о получателях и сообщении</param>
-        /// <returns>(awaitable) Асинхронная задача</returns>
+
         [HttpPost]
-        public async Task Post([FromBody] MailRequest mailRequest)
+        public async Task<ActionResult> Post([FromBody] MailRequest mailRequest)
         {
-            var service = new MailService(ConfigService.GetServerAuthFromConfig(
-                "C:\\Users\\User\\Downloads\\config.ini"));
-            MailMessage message = await mailrepository.AddIfNotExist(
-               new() { Body = mailRequest.Body, Subject = mailRequest.Subject });
-            foreach (var i in mailRequest.Recipients)
+            try
             {
-                MailLog log = new();
-                try
+                foreach (var recipient in mailRequest.Recipients)
                 {
-                    await service.SendMessageAsync(i, mailRequest.Subject, mailRequest.Body);
-                    log.Result = "OK";
-                    log.FailedMessage = "";
-                }
-                catch (Exception ex)
-                {
-                    log.Result = "Failed";
-                    log.FailedMessage = ex.Message;
-                }
-                finally
-                {
-                    log.MailDateTime = DateTime.Now;
-                    Recipient recipient = await recipientrepository.AddIfNotExist(
-                        new() { Email = i });
-                    log.MailMessageRecipient = new MessageRecipient
+                    await mailFacade.SendMail(new Models.SendingMessage
                     {
-                        Message = message,
-                        MailLog = log,
-                        MailRecipient = recipient
-                    };
-                    await logrepository.Add(log);
-                    await Task.Delay(1000);
+                        Body = mailRequest.Body,
+                        EMail = recipient,
+                        Subject = mailRequest.Subject
+                    });
                 }
-            } 
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

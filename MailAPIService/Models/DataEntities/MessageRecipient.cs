@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MailerAPIService.Models.DataEntities
+namespace MailAPIService.Models.DataEntities
 {
     public class MessageRecipient
     {
@@ -21,13 +21,13 @@ namespace MailerAPIService.Models.DataEntities
         /// </summary>
         public int RecipientId { get; set; }
         /// <summary>
-        /// Ссылка на записи сообщений
+        /// Ссылка на сообщение
         /// </summary>
         [ForeignKey(nameof(MessageId))]
         [DeleteBehavior(DeleteBehavior.ClientCascade)]
         public MailMessage Message { get; set; }
         /// <summary>
-        /// Ссылка на записи получателей
+        /// Ссылка на  получателя
         /// </summary>
         [ForeignKey(nameof(RecipientId))]
         [DeleteBehavior(DeleteBehavior.ClientCascade)]
@@ -35,6 +35,7 @@ namespace MailerAPIService.Models.DataEntities
         /// <summary>
         /// Ссылка на лог сообщения
         /// </summary>
-        public MailLog MailLog { get; set; }
+        public MailLog Log { get; set; }
+
     }
 }

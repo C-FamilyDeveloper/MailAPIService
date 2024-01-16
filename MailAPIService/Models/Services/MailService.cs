@@ -1,55 +1,49 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Net.Mail;
-using MailAPIService.Models.Requests;
+﻿using MailAPIService.Models.Configs;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.Extensions.Options;
+using MimeKit;
 
-namespace MailerAPIService.Models.Services
+
+namespace MailAPIService.Models.Services
 {
-    public  class MailService
+    public class MailService : Interfaces.IMailService
     {
-        private MailAddress server;
-        private SmtpClient smtpClient;
-        /// <summary>
-        /// Конструктор сервиса
-        /// </summary>
-        /// <param name="serverAuth">Класс с авторизационной информацией сервера</param>
-        public MailService(MailServerInfo serverAuth) 
+        private MailboxAddress server;
+        private MailServerInfo mailServerInfo;
+
+        public MailService(IOptions<Config> config)
         {
-            server = new(serverAuth.ServerAddress.Trim(), serverAuth.DisplayName.Trim());
-            smtpClient = new(serverAuth.SMTPHost.Trim(), serverAuth.SMTPPort)
-            {
-                UseDefaultCredentials = false,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                Credentials = new NetworkCredential(serverAuth.ServerAddress.Trim(),
-                serverAuth.AuthPassword.Trim()),
-                Timeout = 1000,
-                EnableSsl = true
-            };
+            mailServerInfo = config.Value.MailServerInfo;
+            server = new(mailServerInfo.DisplayName.Trim(), mailServerInfo.ServerAddress.Trim());
         }
-        /// <summary>
-        /// Отправка сообщения по электронной почте, по заданному адресу
-        /// </summary>
-        /// <param name="email">Адрес электронной почты получателя</param>
-        /// <param name="subject">Тема сообщения</param>
-        /// <param name="body">Тело сообщения</param>
-        /// <returns>(awaitable) Асинхронная задача</returns>
-        public async Task SendMessageAsync([EmailAddress] string email, string subject, string body)
+
+        public async Task<SendingResult> TrySendMessage(SendingMessage message)
         {
+            var mimemessage = new MimeMessage();
+            mimemessage.From.Add(server);
+            mimemessage.To.Add(new MailboxAddress(message.EMail, message.EMail));
+            mimemessage.Subject = message.Subject;
+            mimemessage.Body = new TextPart("plain")
+            {
+                Text = message.Body
+            };
+            using SmtpClient smtpClient = new();
+            smtpClient.Connect(mailServerInfo.SMTPHost, Convert.ToInt32(mailServerInfo.SMTPPort), SecureSocketOptions.StartTls);
+            smtpClient.Authenticate(mailServerInfo.ServerAddress, mailServerInfo.AuthPassword);
+            SendingResult result;
             try
             {
-                MailAddress address = new(email);
-                MailMessage message = new(server, address)
-                {
-                    Subject = subject.Trim(),
-                    Body = body.Trim(),
-                };
-                await smtpClient.SendMailAsync(message);
+                await smtpClient.SendAsync(mimemessage);
+                result = new SendingResult { Result = Enums.Result.OK };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
-            }            
+                result = new SendingResult { Result = Enums.Result.Failed, ErrorMessage = ex.Message };
+            }
+            result.DateTime = DateTime.Now;
+            smtpClient.Disconnect(true);
+            return result;
         }
-
     }
 }

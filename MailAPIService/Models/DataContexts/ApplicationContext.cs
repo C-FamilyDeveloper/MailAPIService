@@ -1,7 +1,7 @@
-﻿using MailerAPIService.Models.DataEntities;
+﻿using MailAPIService.Models.DataEntities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MailerAPIService.Models.DataContexts
+namespace MailAPIService.Models.DataContexts
 {
     public class ApplicationContext : DbContext
     {
@@ -21,18 +21,21 @@ namespace MailerAPIService.Models.DataContexts
         /// Таблица получателей и сообщений
         /// </summary>
         public DbSet<MessageRecipient> MessagesRecipients { get; set; } = null!;
+
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
             //Database.EnsureDeleted();
             Database.EnsureCreated();
         }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        { 
+        {
             base.OnModelCreating(modelBuilder);
         }
     }
